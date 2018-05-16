@@ -38,7 +38,7 @@ tags: ["gitbook, github"]
 
 6. 在一个新的目录复制远程仓库的gh-pages 分支并保存为 book-build
 
-      ```git clone -b gh-pages git@github.com:{USERNAME}/example-book.git     book-build```
+      ```git clone -b gh-pages git@github.com:{USERNAME}/example-book.git  book-build```
 
 7. 在本地切回master分之后, 在主分支上编写gitbook 的源码
 
@@ -56,7 +56,6 @@ tags: ["gitbook, github"]
 
   ![github-setttings](/github-pages.png)
 
-  ​
 
 最后，使用http://{username}.github.io/example-book 域名访问Gitbook
 
