@@ -1,0 +1,1 @@
+1. gitcomments 的设置在 beautifulhugo\layouts\_default\single.html 文件中。
