@@ -25,6 +25,7 @@ tags: ["gitbook, github"]
 
 **具体步骤：**
 
+
 1. 在GitHub 新建一个仓库，名字就是访问域名中的{gitbook_repository}字段，本例中使用example-book 作为仓库名进行说明。
 
 2. 将该仓库复制到本地（git clone example-book)
