@@ -46,45 +46,27 @@ desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
     
 [[menu.main]]
     parent = "Categories"
-    name = "Cloud Native"
-    url = "categories/cloud-native"
+    name = "Linux Practice"
+    url = "categories/linux-practice"
     weight = 2
 
 [[menu.main]]
     parent = "Categories"
-    name = "Microservices"
-    url = "categories/microservices"
+    name = "OpenStack"
+    url = "categories/openstack"
     weight = 3
-
-[[menu.main]]
-    parent = "Categories"
-    name = "Devops"
-    url = "categories/devops"
-    weight = 4
 
 [[menu.main]]
     parent = "Categories"
     name = "Github"
     url = "categories/github"
+    weight = 4	
+
+[[menu.main]]
+    parent = "Categories"
+    name = "Devops"
+    url = "categories/devops"
     weight = 5
-
-[[menu.main]]
-    parent = "Categories"
-    name = "Serverless"
-    url = "categories/serverless"
-    weight = 6
-
-[[menu.main]]
-    parent = "Categories"
-    name = "Code"
-    url = "categories/code"
-    weight = 7
-
-[[menu.main]]
-    parent = "Categories"
-    name = "Tags"
-    url = "tags"
-    weight = 8
 
 [[menu.main]]
     identifier = "Gitbooks"
@@ -102,82 +84,12 @@ desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
     name = "Docker handbook"
     url = "docker-handbook"
     weight = 2
-
+	
 [[menu.main]]
     parent = "Gitbooks"
-    name = "Hugo Handbook"
-    url = "hugo-handbook"
-    weight = 4
-
-[[menu.main]]
-    parent = "Gitbooks"
-    name = "Istio service mesh"
-    url = "http://istio.doczh.cn"
-    weight = 4
-
-[[menu.main]]
-    parent = "Gitbooks"
-    name = "Migrating to Cloud Native"
-    url = "migrating-to-cloud-native-application-architectures"
-    weight = 5
-
-[[menu.main]]
-    identifier = "Publications"
-    name = "Publications"
+    name = "Oz Tool"
+    url = "simple-operation-of-oz-tool"
     weight = 3
-
-[[menu.main]]
-    parent = "Publications"
-    name = "Cloud Native Go"
-    url = "cloud-native-go"
-    weight = 1
-
-[[menu.main]]
-    parent = "Publications"
-    name = "Cloud Native Python"
-    url = "posts/cloud-native-python"
-    weight = 2
-
-[[menu.main]]
-    parent = "Publications"
-    name = "Cloud Native Java"
-    url = "posts/cloud-native-java"
-    weight = 4
-
-[[menu.main]]
-    identifier = "Projects"
-    name = "Projects"
-    weight = 5
-
-[[menu.main]]
-    parent = "Projects"
-    name = "Spark on kubernetes"
-    url = "spark-on-k8s"
-    weight = 1
-
-[[menu.main]]
-    parent = "Projects"
-    name = "Awesome Cloud Native"
-    url = "awesome-cloud-native"
-    weight = 2
-
-[[menu.main]]
-    parent = "Projects"
-    name = "Cloudinary go"
-    url = "posts/cloudinary-go"
-    weight = 3
-
-[[menu.main]]
-    parent = "Projects"
-    name = "Magpie"
-    url = "posts/yarn-on-docker"
-    weight = 5
-
-[[menu.main]]
-    parent = "Projects"
-    name = "Cheatsheets"
-    url = "cheatsheets"
-    weight = 6
 
 [[menu.main]]
     name = "About"
