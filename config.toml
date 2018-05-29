@@ -75,8 +75,8 @@ desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
 
 [[menu.main]]
     parent = "Gitbooks"
-    name = "Kubernetes handbook"
-    url = "kubernetes-handbook"
+    name = "k8s sourcecode analysis"
+    url = "k8s-source-code-analysis"
     weight = 1
 
 [[menu.main]]
