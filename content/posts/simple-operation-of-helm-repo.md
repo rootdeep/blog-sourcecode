@@ -1,11 +1,9 @@
 ---
-
 title: "helm 自带私有仓库使用方法"
 draft: false
 date: "2018-05-16T14:03:57+08:00"
 categories: "kubernetes"
 tags: ["kubernetes", "helm"]
-
 ---
 
 安装helm 客户端后，使用 helm serve 命令可以在本地启动一个私有仓库。

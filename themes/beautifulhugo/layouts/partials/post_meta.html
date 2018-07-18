@@ -1,4 +1,4 @@
-<span  class="post-meta">
+<span class="post-meta">
   {{ default (i18n "dateFormat") .Site.Params.dateformat | .Date.Format | i18n "postedOnDate" }}
   {{ if .IsTranslated -}}
     {{- $sortedTranslations := sort .Translations "Site.Language.Weight" -}}

@@ -1,0 +1,38 @@
+<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+<aside id=comments>
+     <!--gitment-->
+    <div>
+        <h2> Comments </h2>
+    </div>
+    <div id="container"></div>
+    <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+    <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+    <script>
+        var gitment = new Gitment({
+					    id: {{.Title}},
+                        owner: 'rootdeep', //github account
+                        repo: 'rootdeep.github.io', //
+                        oauth: {
+                            client_id: 'a45f8ab669362a110f83',
+                            client_secret: '925eb6e429ff5eb575823cd6a7e193dcad2a61f4',
+                        },
+                    })
+        gitment.render('container')
+    </script>
+	
+    <!-- 来必力City版安装代码 
+    <div id="lv-container" data-id="city" data-uid="change-to-your-own">
+    	<script type="text/javascript">
+       (function(d, s) {
+           var j, e = d.getElementsByTagName(s)[0];
+           if (typeof LivereTower === 'function') { return; }
+           j = d.createElement(s);
+           j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+           j.async = true;
+           e.parentNode.insertBefore(j, e);
+       })(document, 'script');
+    	</script>
+    <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+    -->
+</aside>

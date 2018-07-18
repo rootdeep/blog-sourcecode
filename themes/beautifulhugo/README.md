@@ -13,7 +13,7 @@ There are some additional features beside of the original Beautiful-hugo theme:
 - Use Baidu Analysis(百度统计)
 - Use prism for syntax highlighting
 - Use algolia for searching
-
+- [livere（来必力）](https://livere.com) 评论插件
 ## Installation
 
 ```bash

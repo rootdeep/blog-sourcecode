@@ -2,7 +2,7 @@ baseURL = "https://rootdeep.github.io/"
 title = "RootDeep"
 DefaultContentLanguage = "en"
 hasCJKLanguage = true
-languageCode = "zh-cn"
+languageCode = "zh"
 theme = "beautifulhugo"
 metaDataFormat = "yaml"
 pygmentsUseClasses = false
@@ -11,6 +11,8 @@ pygmentCodeFences = true
 
 [Params]
 hello = "Hi, I'm Zhiguo Li"
+commit = false
+comments = true
 logo = "rootdeep.jpg"
 
 [[Params.bigimg]]
@@ -18,20 +20,16 @@ src = "furongyuan.jpg"
 desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
 
 [Author]
-  email = "zhiguo.lee@foxmail.com"
-  github = "zhiguo.lee"
-  weibo = "weibo_username"
-  wechat= "/img/qrcode.jpg" # Replace with your wechat qrcode image
-  facebook = "facebook_username"
-  google = "googlplus_id_number"
-  instagram = "instagram_username"
+  name = "Zhiguo Li"
+  website = "https://rootdeep.github.io/"
 
+  github = "rootdeep"
 
 [[menu.main]]
     identifier = "Home"
     name = "Home"
     weight = 1
-	url = "/"
+    url = "/"
 
 [[menu.main]]
     identifier = "Categories"

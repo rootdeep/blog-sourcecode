@@ -1,0 +1,381 @@
+---
+date: "2018-06-23T11:18:57+08:00"
+draft: false
+title: "Rabbit Driver Connection 创建流程"
+subtitle: "oslo.messaging 库代码分析(二)"
+categories: "OpenStack"
+tags: ["OpenStack","oslo.messaging","RabbitMQ"]
+nocomment: true
+postmeta: false
+---
+
+
+
+本节主要分析了RabbitDriver中Connection类的初始化过程中，一个TCP 连接过程中调用代码的流程。流程深入到了kombu 库的部分代码。Kombu是使用Python实现消息库， 对RabbitMQ提供的API进行了封装，比如封装出了Exchange, Queue等这些类，使得编程者在使用Python语言操作RabbitMQ时更加简单。
+
+先回忆下一个call 调用的流程：
+
+```RPCClient.call()[此处可能调用prepare() 修改retry 次数]``` ->``` _baseCallConext.call()``` ->
+
+``` RPCTransport._send()``` ->```RabbitDriver.send()(其实就是 AMQPDriverBase.send())```->```AMQPDriverBase._send()```
+
+->```AMQPDriverBase._send()```->``````AMQPDriverBase._get_connection(rpc_common.PURPOSE_SEND)[不会带入retry]```
+
+->```rpc_common.ConnectionContext()```->``` ConnectionPool.get()```->```返回一个连接或ConnectionPool.create()```
+
+如果是调用create()新创建一个连接，就会实例化一个Connection 实例，该Connection类的实现在消息队列驱动类所在的模块，对于Rabbit Driver，Connection 类位于oslo_messaging/_drivers/impl_rabbit.py。Connection 类封装了RabbitMQ 的相关操作，如：direct_send,topic_send，fanout_send, notify_send 等。这几种方法对应了RabbitMQ 中几种消息分发模式。
+
+Connection 实例化过程如下：
+
+oslo_messaging/_drivers/impl_rabbit.py 
+
+```
+class Connection(object):
+    """Connection object."""
+
+    pools = {}
+
+    def __init__(self, conf, url, purpose):
+        # NOTE(viktors): Parse config options
+        driver_conf = conf.oslo_messaging_rabbit
+        # 参数初始化
+        self.max_retries = driver_conf.rabbit_max_retries
+        
+
+        # Try forever?
+        if self.max_retries <= 0: # <=0 都是永久尝试连接
+            self.max_retries = None
+
+        self._url = ''
+        变量初始化
+        if purpose == rpc_common.PURPOSE_SEND:
+            self._connection_lock = ConnectionLock()
+        else:
+            self._connection_lock = DummyConnectionLock()
+            
+        self.connection_id = str(uuid.uuid4()) #生成连接ID
+        
+        # 初始化kombu driver 中的同名Connection 实例，该实例还未建立Socket 连接
+        self.connection = kombu.connection.Connection()
+
+        with self._connection_lock:
+            self.ensure_connection() # 进入此方法，建立连接
+
+
+        if purpose == rpc_common.PURPOSE_SEND:
+            self._heartbeat_start()
+
+    
+        if self._heartbeat_supported_and_enabled():
+            self._poll_timeout = self._heartbeat_wait_timeout
+        else:
+            self._poll_timeout = 1
+```
+
+oslo_messaging/_drivers/impl_rabbit.py 
+
+```
+    def ensure_connection(self):
+        self._set_current_channel(None) # 确认前，将self.channel 置为None
+        #传入connect() 方法，该方法将会进一步调用建立连接的其他方法
+        # 尽管self.ensure 有retry 参数，但这里没有传递进去
+        self.ensure(method=self.connection.connect)  
+        self.set_transport_socket_timeout()
+```
+
+
+
+oslo_messaging/_drivers/impl_rabbit.py 
+
+```
+def ensure(self, method, retry=None, 
+               recoverable_error_callback=None, error_callback=None,
+               timeout_is_error=True):
+
+        if retry is None:
+            retry = self.max_retries # 虽然retry 没有接收任何传入值，但在此被赋值
+        if retry is None or retry < 0:
+            retry = None
+
+        def execute_method(channel):
+            self._set_current_channel(channel)
+            # 正常情况，稍后会走到此，运行调用ensure() 传递进来的参数
+            method()
+
+        try:
+           # self.connection 即kombu 库下的Connection 类实例
+           # autoretry 调用较复杂，将在下文详细说明
+            autoretry_method = self.connection.autoretry(
+                #self.channel 只会在调用ensure_connection()方法时，被置为None
+                execute_method, channel=self.channel,
+                max_retries=retry,
+                errback=on_error,
+                interval_start=self.interval_start or 1,
+                interval_step=self.interval_stepping,
+                interval_max=self.interval_max,
+                on_revive=on_reconnection)
+            # autoretry_method 实际是一个_ensured 方法
+            ret, channel = autoretry_method()
+            self._set_current_channel(channel) #设置self.channel 
+            return ret
+        except rpc_amqp.AMQPDestinationNotFound:
+            # NOTE(sileht): we must reraise this without
+            # trigger error_callback
+            raise
+        except Exception as exc:
+            error_callback and error_callback(exc)
+            self._set_current_channel(None)
+            # NOTE(sileht): number of retry exceeded and the connection
+            # is still broken
+            info = {'err_str': exc, 'retry': retry}
+            info.update(self.connection.info())
+            msg = _('Unable to connect to AMQP server on '
+                    '%(hostname)s:%(port)s after %(retry)s '
+                    'tries: %(err_str)s') % info
+            LOG.error(msg)
+            raise exceptions.MessageDeliveryFailure(msg)
+```
+
+下面看一下self.connection.autoretry 调用流程，这个流程用法稍微用到了Python的高级特性——可调用对象。
+
+首先，明确self.connection 为在上述Connection 类初始化中赋值的，实际为kombu/connection.py 中的Connection实例，在kombu 库中的Connection类中，同样有ensure_connection() 和ensure() 方法。
+
+kombu/connection.py ,并且有很多方法使用了property 装饰器
+
+```
+ class Connection(object):   
+    def autoretry(self, fun, channel=None, **ensure_options):#fun 为execute_method
+        channels = [channel]
+        class Revival(object): #通过__call__()实现了一个可调用对象
+            __name__ = getattr(fun, '__name__', None) # 将参数fun 的名字置为Revival 类的名字
+            __module__ = getattr(fun, '__module__', None)
+            __doc__ = getattr(fun, '__doc__', None)
+
+            def __init__(self, connection):
+                self.connection = connection # 将Connection 类实例引用赋值给了self.connection
+
+            def revive(self, channel):
+                channels[0] = channel
+
+            def __call__(self, *args, **kwargs): #将在调用Revival 类时被执行
+                if channels[0] is None:
+                     #default_channel 实际为Connection类中一个通过property 装饰的方法
+                    self.revive(self.connection.default_channel)
+                return fun(*args, channel=channels[0], **kwargs), channels[0]
+
+        revive = Revival(self) #注意传递进了参数为自身的类实例引用
+        return self.ensure(revive, revive, **ensure_options) 
+```
+
+
+
+kombu/connection.py
+
+```
+class Connection(object):    
+   def ensure(self, obj, fun, errback=None, max_retries=None, # fun 在此实际为一个Revival 类实例
+               interval_start=1, interval_step=1, interval_max=1,
+               on_revive=None):
+        def _ensured(*args, **kwargs): # 上层执行autoretry_method()语句时，首先进入该方法 
+            got_connection = 0
+            conn_errors = self.recoverable_connection_errors
+            chan_errors = self.recoverable_channel_errors
+            has_modern_errors = hasattr(
+                self.transport, 'recoverable_connection_errors',
+            )
+            with self._reraise_as_library_errors():
+                for retries in count(0):  # for infinity
+                    try:
+                        return fun(*args, **kwargs) #执行revive 实例，实际进入__call__() 方法
+                    except conn_errors as exc:
+                        if got_connection and not has_modern_errors:
+                            raise
+                        if max_retries is not None and retries > max_retries:
+                            raise
+                        self._debug('ensure connection error: %r',
+                                    exc, exc_info=1)
+                        self.collect()
+                        errback and errback(exc, 0)
+                        remaining_retries = None
+                        if max_retries is not None:
+                            remaining_retries = max(max_retries - retries, 1)
+                        self.ensure_connection(
+                            errback,
+                            remaining_retries,
+                            interval_start, interval_step, interval_max,
+                            reraise_as_library_errors=False,
+                        )
+                        channel = self.default_channel
+                        obj.revive(channel)
+                        if on_revive:
+                            on_revive(channel)
+                        got_connection += 1
+                    except chan_errors as exc:
+                        if max_retries is not None and retries > max_retries:
+                            raise
+                        self._debug('ensure channel error: %r',
+                                    exc, exc_info=1)
+                        errback and errback(exc, 0)
+        ## 更改_ensure() 的方法名
+        _ensured.__name__ = bytes_if_py2('{0}(ensured)'.format(fun.__name__))
+        _ensured.__doc__ = fun.__doc__
+        _ensured.__module__ = fun.__module__
+        return _ensured # 返回给上层的 autoretry_method 变量
+```
+
+
+
+autoretry_method变量的赋值过程如下：
+
+``` Connection.autoretry()```->```Connection.ensure()```-> ```return ensure._ensure```
+
+autoretry_method变量的执行过程：
+
+```autoretry_method() [实际执行的是_ensure()方法]```->```Revival.__call__()```。下面详细分析一下```__call__()``` 的执行流程：
+
+        class Revival(object):
+            __name__ = getattr(fun, '__name__', None)
+            __module__ = getattr(fun, '__module__', None)
+            __doc__ = getattr(fun, '__doc__', None)
+    
+            def __init__(self, connection):
+                self.connection = connection
+    
+            def revive(self, channel):
+                channels[0] = channel
+    
+            def __call__(self, *args, **kwargs):
+                if channels[0] is None: # channel 存在，就不去判断是否存在TCP连接，及生成channel了。
+                    self.revive(self.connection.default_channel) #给channels[0]赋值
+                return fun(*args, channel=channels[0], **kwargs), channels[0]
+在```__call__```方法中,调用self.revive()方法给channels[0] 赋值，revive() 方法传入的参数实际上是通过执行了self.connection.default_channel 获取，default_channel 是一个被property 装饰的方法。
+
+kombu/connetion.py
+
+    @property
+    def default_channel(self):
+        # make sure we're still connected, and if not refresh.
+        self.ensure_connection() # 确认连接，包括创建连接的动作，没有传入任何参数
+        if self._default_channel is None:
+            self._default_channel = self.channel() # 创建channel
+        return self._default_channel
+kombu/connection.py
+
+```
+    def ensure_connection(self, errback=None, max_retries=None,
+                          interval_start=2, interval_step=2, interval_max=30,
+                          callback=None, reraise_as_library_errors=True):
+        def on_error(exc, intervals, retries, interval=0):
+            round = self.completes_cycle(retries)
+            if round:
+                interval = next(intervals)
+            if errback:
+                errback(exc, interval)
+            self.maybe_switch_next()  # select next host
+
+            return interval if round else 0
+
+        ctx = self._reraise_as_library_errors
+        if not reraise_as_library_errors:
+            ctx = self._dummy_context
+        with ctx():
+            # self.connect 
+            retry_over_time(self.connect, self.recoverable_connection_errors,
+                            (), {}, on_error, max_retries,
+                            interval_start, interval_step, interval_max,
+                            callback) 
+        return self
+```
+
+
+
+kombu/utils/functional.py
+
+```
+def retry_over_time(fun, catch, args=[], kwargs={}, errback=None,
+                    max_retries=None, interval_start=2, interval_step=2,
+                    interval_max=30, callback=None):
+    retries = 0
+    interval_range = fxrange(interval_start,
+                             interval_max + interval_start,
+                             interval_step, repeatlast=True)
+    for retries in count():
+        try:
+            return fun(*args, **kwargs) # fun 实际是传递的self.connect 方法。
+        except catch as exc:
+            if max_retries and retries >= max_retries:
+                raise
+            if callback:
+                callback()
+            tts = float(errback(exc, interval_range, retries) if errback
+                        else next(interval_range))
+            if tts:
+                for _ in range(int(tts)):
+                    if callback:
+                        callback()
+                    sleep(1.0)
+                # sleep remainder after int truncation above.
+                sleep(abs(int(tts) - tts))
+```
+
+在retry_over_time() 函数中，我们看到了一个用于尝试连接的for 循环，如果本次连接失败，通过在异常处理中判断retries 的次数 是否超过max_retries 来决定是否终止连接尝试。再看max_retries 参数的来源，max_retries 实际上来源于ensure_connection(),但在default_channel() 方法中调用ensure_connection 时，并未传递进去任何参数，所以，之前分析中看到的retry (一个是RPClinet 初始化中的retry ，一个是impl_rabbit.py Connection 类初始化中的max_retries ）在此都没生效。
+
+再看 retry_over_time() 中的正确执行流程 ,进入fun(*args, **kwargs) 一句，fun 变量实际为connect 方法。该方法内的调用多处用到了property 装饰特性。
+
+kombu/connection.py
+
+```
+class Connection(object):    
+    def connect(self):
+        """Establish connection to server immediately."""
+        self._closed = False
+        return self.connection # 用到property 装饰器
+    
+    @property
+    def connection(self):
+        if not self._closed: # 在connect()函数中被无条件置为False
+            # self.connected 同样是一个被property装饰的函数，执行该函数确认连接是否已经建立
+            if not self.connected:  
+                self.declared_entities.clear()
+                self._default_channel = None
+                self._connection = self._establish_connection() # self._connection 在此赋值
+                self._closed = False
+            return self._connection
+    
+    def _establish_connection(self): # 建立连接
+        self._debug('establishing connection...')
+        # self.transport 用到property 装饰器，实际为返回self._transport
+        conn = self.transport.establish_connection() 
+        self._debug('connection established: %r', self)
+        return conn
+        
+    @property
+    def transport(self):
+        if self._transport is None:  
+           # self._transport 的通过create_transport() 初始化，实际为kombu/transport 下某个
+           # Transport 类实例。此处，为kombu/transport/pyampq.py 中的Transport 类实例。
+           # 先不细看create_transport() 的实例化过程
+            self._transport = self.create_transport()
+        return self._transport 
+```
+
+
+
+返回到Revial 类的``__call__() ``中 ，执行完self.revive() 方法后，接着执行autoretry 方法传递的函数fun。该函数是ensure()  [impl_rabbit.py]方法内部定义的 execute_method().
+
+```
+ def execute_method(channel):
+     
+     #设置当前使用的self.channel 为传递进来的channel
+     #并且，如果为消费者channel ，设置channel的 QoS prefetch count
+     self._set_current_channel(channel) 
+     
+     #执行ensure()传递的fun,ensure在多处被调用，如topic_send, fanout_send,direct_sned,
+     #ensure_connection等. 对于ensure_connection()，执行的方法还是上面的connect() 方法，但不会再次 
+     #建立建立，是直接返回
+     method() 
+```
+
+
+
+返回到impl_rabbit.py 中Connection 类的初始化方法，执行完self.ensure_connection()语句后，一个TCP连接和channel 就初始化完成了，需要记住的是代码中通过autoretry() 方法传递的retry 参数在限制连接次数上是无效的，代码里是写的的无限次尝试连接。接下来，在impl_rabbit.py 中Connection 类中，根据具体的Transport （位于kombu库中）是否支持心跳检测来决定是否需要启动工业线程做心跳检测。
