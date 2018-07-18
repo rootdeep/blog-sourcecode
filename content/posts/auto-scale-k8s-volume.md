@@ -28,24 +28,22 @@ tags: ["K8s","volume","resize"]
 
 默认k8s 不开启该功能，需要做些配置才能使用。具体的步骤如下
 
-1. 修改api-server 配置文件，添加准入控制规则 PersistentVolumeClaimResize ，并打开ExpandPersistentVolumes  特性开关，相关修改如下：
+- 修改api-server 配置文件，添加准入控制规则 PersistentVolumeClaimResize ，并打开ExpandPersistentVolumes  特性开关，相关修改如下：
 
-   ```
-   sudo vim /etc/kubernetes/apiserver
-   # default admission control policies
-     KUBE_ADMISSION_CONTROL="--admission-control=PersistentVolumeClaimResize,Initializers,
-    NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,
-     NodeRestriction,ResourceQuota"
-     --feature-gates=ExpandPersistentVolumes=true
-   ```
+```
+sudo vim /etc/kubernetes/apiserver
+# default admission control policies
+  KUBE_ADMISSION_CONTROL="--admission-control=PersistentVolumeClaimResize,Initializers,
+ NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,
+  NodeRestriction,ResourceQuota"
+  --feature-gates=ExpandPersistentVolumes=true
+```
+- 修改controller 配置文件，打开ExpandPersistentVolumes  特性开关
 
-2. 修改controller 配置文件，打开ExpandPersistentVolumes  特性开关
-
-   ```
-   --feature-gates=ExpandPersistentVolumes=true
-   ```
-
-3. 重启api-server 和 controller 服务。
+```
+--feature-gates=ExpandPersistentVolumes=true
+```
+- 重启api-server 和 controller 服务。
 
 
 
@@ -151,9 +149,7 @@ only dynamically provisioned pvc can be resized and the storageclass that provis
 
 核心步骤是：
 
-1. 扩容容器卷在主机上的对应的块设备，即找到该块设备对应的cinder卷，对cinder卷扩容。
-
-   此时，可以在主机上看到块设备容量已经变化（通过fdisk 命令），但是文件系统的大小并没有变化（通过df -h 命令）。
+1. 扩容容器卷在主机上的对应的块设备，即找到该块设备对应的cinder卷，对cinder卷扩容。此时，可以在主机上看到块设备容量已经变化（通过fdisk 命令），但是文件系统的大小并没有变化（通过df -h 命令）。
 
 2. 使用resize2fs 命名 操作块设备（块设备的文件系统是etx4)
 
@@ -165,7 +161,7 @@ only dynamically provisioned pvc can be resized and the storageclass that provis
 
 5. 再次使用```kubectl get ```命令查看PVC/PV 的大小。
 
-    
+      
 
 # 版本演进
 

@@ -3,7 +3,7 @@ date: "2018-06-21T9:18:57+08:00"
 draft: false
 title: "OpenStack RPC Call/CAST 调用流程"
 subtitle: "oslo.messaging 库代码分析(一)"
-categories: "kubernetes"
+categories: "OpenStack"
 tags: ["OpenStack","oslo.messaging","RabbitMQ"]
 ---
 
