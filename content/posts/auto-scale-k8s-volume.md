@@ -4,7 +4,6 @@ draft: false
 title: "K8s 卷在线扩容调研"
 categories: "kubernetes"
 tags: ["K8s","volume","resize"]
-comment: true
 ---
 
 自己遇到了一个扩容在线卷（已绑定到POD的卷的）的需求。调研了一番，发现在k8s 1.8 alpha版本中，提供了一种卷扩容的方法，并且支持扩容的卷后端存储有：

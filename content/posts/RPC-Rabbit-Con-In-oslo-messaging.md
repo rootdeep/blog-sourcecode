@@ -5,8 +5,6 @@ title: "Rabbit Driver Connection 创建流程"
 subtitle: "oslo.messaging 库代码分析(二)"
 categories: "OpenStack"
 tags: ["OpenStack","oslo.messaging","RabbitMQ"]
-nocomment: true
-postmeta: false
 ---
 
 

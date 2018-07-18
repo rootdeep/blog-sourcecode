@@ -5,8 +5,6 @@ title: "OpenStack RPC Call/CAST 调用流程"
 subtitle: "oslo.messaging 库代码分析(一)"
 categories: "kubernetes"
 tags: ["OpenStack","oslo.messaging","RabbitMQ"]
-nocomment: true
-postmeta: false
 ---
 
 最近遇到了一个关于nova 组件调用oslo.messaging 库代码出现异常的问题。抛出的异常，大概描述如下
