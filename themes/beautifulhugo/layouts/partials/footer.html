@@ -27,7 +27,7 @@
           {{ end }}
         </ul>
         <p class="credits copyright text-muted">
-        &copy;2017
+        &copy;2018
           {{ if .Site.Author.name }}
             {{ if .Site.Author.website }}
               <a href="{{ .Site.Author.website }}">{{ .Site.Author.name }}</a>
@@ -38,10 +38,6 @@
           &nbsp;&bull;&nbsp;
           {{ .Site.LastChange.Format "January 2,2006" }}
           updated
-          {{ if .Site.Title }}
-            &nbsp;&bull;&nbsp;
-            <a href="{{ "" | absLangURL }}">{{ .Site.Title }}</a>
-          {{ end }}
         </p>
         <!-- Please don't remove this, keep my open source work credited :) -->
         <p class="credits theme-by text-muted">

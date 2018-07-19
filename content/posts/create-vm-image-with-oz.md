@@ -9,7 +9,7 @@ tags: ["oz","image","vm"]
 
 
 
-## **Oz 简介**
+## Oz 简介
 
 镜像制作一般分为手动制作和自动制作。
 
@@ -46,7 +46,7 @@ Oz 支持的操作系统：https://github.com/clalancette/oz/wiki
 
 
 
-## **准备制作环境**
+## 准备制作环境
 
 本次制作镜像的HOST 机器是在VMware上建立的一个虚拟机。安装虚拟机用到的镜像版本为：CentOS-7-x86_64-DVD-1708.iso。省略HOST 虚拟机安装步骤。
 
@@ -97,7 +97,7 @@ OZ安装完后:
 
 ```# yum install qemu-system-x86  #安装此工具，稍后用于自验制作的镜像是否能启动```
 
-##  **配置Oz**
+##  配置Oz
 
 oz默认生成的镜像为raw格式，我们切换为qcow2。qcow2 格式的文件虽然在性能上比Raw 格式的有一些损失（主要体现在对于文件增量上，qcow2 格式的文件为了分配 cluster 多花费了一些时间），但是 qcow2 格式的镜像比 Raw 格式文件更小，只有在虚拟机实际占用了磁盘空间时，其文件才会增长，能方便的减少迁移花费的流量，更适用于云计算系统，同时，它还具有加密，压缩，以及快照等 raw 格式不具有的功能。
 
@@ -131,7 +131,7 @@ Oz 配置介绍：<https://github.com/clalancette/oz/wiki/oz-install>
 
 
 
-## **制作镜像**
+## 制作镜像
 
 **编写TDL文件**
 
@@ -314,7 +314,7 @@ EOF
 
 ```# oz-install -p -u -d3 -a centos7.ks centos7.tdl```
 
-##  **验证镜像**
+##  验证镜像
 
 镜像创建完成后，镜像会保存在/var/lib/libvirt/images/下。我们可以通过以下命令先在节点A尝试启动镜像，验证制作是否成功。启动前，先备份镜像，并且使用qemu-system-x86_64 启动竟像时，需要在本地配置VNC viewer client 及在节点A配置VNC server。
 

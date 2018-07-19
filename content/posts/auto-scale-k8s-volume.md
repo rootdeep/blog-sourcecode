@@ -24,7 +24,7 @@ tags: ["K8s","volume","resize"]
 
 通过搭建1.9.5版本K8s集群，发现截止该版本，实际上提供的卷扩容功能还比较弱，还得把处于"in-use" 状态的卷变成"available" 状态。整个扩容操作流程如下：
 
-# **配置k8s**
+# 配置k8s
 
 默认k8s 不开启该功能，需要做些配置才能使用。具体的步骤如下
 
@@ -161,7 +161,7 @@ only dynamically provisioned pvc can be resized and the storageclass that provis
 
 5. 再次使用```kubectl get ```命令查看PVC/PV 的大小。
 
-      
+  ​    
 
 # 版本演进
 

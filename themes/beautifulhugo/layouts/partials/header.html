@@ -57,7 +57,7 @@
             -->
           <div class="col-lg-12 col-md-12 col-md-offset-0">
             <div class="{{ .Type }}-heading">
-                <h1 align="center">{{ with $.Scratch.Get "title" }}{{.}}{{ else }}<br/>{{ end }}</h1>
+				<h1 align="center"  style="font-size:40px;">{{ with $.Scratch.Get "title" }}{{.}}{{ else }}<br/>{{ end }}</h1>
                 {{ if $subtitle }}
                   {{ if eq .Type "page" }}
                     <hr class="small">

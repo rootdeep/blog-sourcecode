@@ -10,31 +10,19 @@ pygmentCodeFences = true
 #googleAnalytics = "XXX"
 
 [Params]
-hello = "Hi, I'm Zhiguo Li"
 commit = false
 comments = true
 logo = "rootdeep.jpg"
 
-[[Params.bigimg]]
-src = "furongyuan.jpg"
-desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
-
 [Author]
   name = "Zhiguo Li"
   website = "https://rootdeep.github.io/"
-
   github = "rootdeep"
-
-[[menu.main]]
-    identifier = "Home"
-    name = "Home"
-    weight = 1
-    url = "/"
 
 [[menu.main]]
     identifier = "Categories"
     name = "Categories"
-    weight = 2
+    weight = 1
 
 [[menu.main]]
     parent = "Categories"
@@ -69,7 +57,7 @@ desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
 [[menu.main]]
     identifier = "Gitbooks"
     name = "Gitbooks"
-    weight = 3
+    weight = 2
 
 [[menu.main]]
     parent = "Gitbooks"
@@ -88,11 +76,6 @@ desc = "The night scenes in in Xi'an Tang Paradise, Mar 10, 2017"
     name = "Oz Tool"
     url = "simple-operation-of-oz-tool"
     weight = 3
-
-[[menu.main]]
-    name = "About"
-    url = "about"
-    weight = 6
 
 
 

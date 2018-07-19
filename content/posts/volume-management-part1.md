@@ -1,7 +1,7 @@
 ---
 title: "K8s 卷管理源码分析（一）"
 draft: false
-date: "2017-06-01T20:18:57+08:00"
+date: "2017-06-01T12:18:57+08:00"
 categories: "kubernetes"
 tags: ["kubernetes"]
 ---
