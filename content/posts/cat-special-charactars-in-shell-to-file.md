@@ -6,6 +6,7 @@ subtitle: "一行或多行命令的中特殊字符输出方法"
 categories: "linux-practice"
 tags: ["Linux","cat","shell-script"]
 description: "Linux 实践错误记录"
+nocomment: true
 ---
 
 有时候，我们会通过cat 的方式在终端敲入多行shell 命令到一个文件中，其中会遇到诸如“ ` ”  （ESC 下边的键）或者 “$” 这两个特殊的字符。把这两个字符敲入文件，需要做转义处理。
